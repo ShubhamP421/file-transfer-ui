@@ -126,7 +126,7 @@ const App = () => {
                 <div className="mt-4 p-5 bg-slate-950 border border-blue-500/30 rounded-2xl flex items-center justify-between animate-in zoom-in duration-300">
                   <div>
                     <span className="text-[10px] uppercase tracking-[0.3em] text-blue-500 font-bold block mb-1">Your Passcode</span>
-                    <p className="text-4xl font-mono font-black text-white leading-tight tracking-tighter uppercase">{code}</p>
+                    <p className="text-4xl font-mono font-black text-white leading-tight tracking-tighter lowercase">{code}</p>
                   </div>
                   <button 
                     onClick={copyToClipboard}
@@ -147,11 +147,13 @@ const App = () => {
 
               <div className="space-y-4">
                 <input 
-                  type="text" 
-                  placeholder="CODE-HERE"
-                  value={inputCode}
-                  onChange={(e) => setInputCode(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-5 text-center text-3xl font-mono tracking-[0.4em] uppercase focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all placeholder:tracking-normal placeholder:text-base placeholder:text-slate-700 text-purple-400"
+                type="text" 
+                placeholder="code"
+                value={inputCode}
+                // This ensures that even if the phone auto-capitalizes, it saves as lowercase
+                onChange={(e) => setInputCode(e.target.value.toLowerCase())} 
+                maxLength={4} 
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-5 text-center text-3xl font-mono tracking-[0.4em] lowercase focus:ring-2 focus:ring-purple-500 outline-none transition-all text-purple-400 placeholder:text-slate-700"
                 />
                 <button 
                   onClick={handleRetrieve}
