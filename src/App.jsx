@@ -9,9 +9,8 @@ const App = () => {
   const [resultUrl, setResultUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [filePreview, setFilePreview] = useState(null); // To store the found file info
 
-  // ⚠️ REPLACE THIS with your actual Render URL (e.g., https://api-xyz.onrender.com)
+  // ⚠️ REPLACE THIS with your actual Render URL
   const API_URL = "https://file-transfer-system-ug93.onrender.com"; 
 
   // --- Logic: Upload File ---
@@ -40,31 +39,28 @@ const App = () => {
   };
 
   // --- Logic: Retrieve File ---
-const handleRetrieve = async () => {
-  if (!inputCode) return;
-  setLoading(true);
-  
-  // We clear any old preview before searching for a new one
-  setFilePreview(null); 
-
-  try {
-    // We trim and lowercase to prevent those mobile keyboard errors
-    const cleanCode = inputCode.trim().toLowerCase();
-    const res = await fetch(`${API_URL}/file/${cleanCode}`);
+  const handleRetrieve = async () => {
+    if (!inputCode) return;
+    setLoading(true);
+    setResultUrl(''); // Clear previous results
     
-    if (res.ok) {
-      const data = await res.json();
-      // ✅ Store the data in filePreview to trigger the "Pop-up" UI
-      setFilePreview(data); 
-    } else {
-      alert("Invalid or expired code ❌");
+    try {
+      const cleanCode = inputCode.trim().toLowerCase();
+      const res = await fetch(`${API_URL}/file/${cleanCode}`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        // ✅ This sets the URL which triggers the "Pop-up" card below
+        setResultUrl(data.downloadUrl); 
+      } else {
+        alert("Invalid or expired code ❌");
+      }
+    } catch (err) {
+      alert("Error connecting to server.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    alert("Error connecting to server.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
@@ -73,7 +69,7 @@ const handleRetrieve = async () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center p-4 font-sans text-sm">
       
       {/* Glow Effect in Background */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
@@ -102,8 +98,8 @@ const handleRetrieve = async () => {
             /* SEND VIEW */
             <div className="space-y-6">
               <div className="text-center space-y-1">
-                <h2 className="text-3xl font-black text-white italic">FLASH SHARE</h2>
-                <p className="text-slate-500 text-xs font-medium tracking-widest uppercase">Ephemeral Cloud Transfer</p>
+                <h2 className="text-3xl font-black text-white italic tracking-tighter">FLASH SHARE</h2>
+                <p className="text-slate-500 text-[10px] font-medium tracking-[0.2em] uppercase">Ephemeral Cloud Transfer</p>
               </div>
 
               <div className="group relative border-2 border-dashed border-slate-700 rounded-3xl p-10 hover:border-blue-500/50 transition-all bg-slate-950/30 flex flex-col items-center justify-center text-center">
@@ -149,18 +145,17 @@ const handleRetrieve = async () => {
             <div className="space-y-6">
               <div className="text-center space-y-1">
                 <h2 className="text-3xl font-black text-white italic tracking-tight">RETRIEVE</h2>
-                <p className="text-slate-500 text-xs font-medium tracking-widest uppercase italic">Enter the unique 7-digit code</p>
+                <p className="text-slate-500 text-[10px] font-medium tracking-widest uppercase italic">Enter the unique 4-character code</p>
               </div>
 
               <div className="space-y-4">
                 <input 
-                type="text" 
-                placeholder="code"
-                value={inputCode}
-                // This ensures that even if the phone auto-capitalizes, it saves as lowercase
-                onChange={(e) => setInputCode(e.target.value.toLowerCase())} 
-                maxLength={4} 
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-5 text-center text-3xl font-mono tracking-[0.4em] lowercase focus:ring-2 focus:ring-purple-500 outline-none transition-all text-purple-400 placeholder:text-slate-700"
+                  type="text" 
+                  placeholder="code"
+                  value={inputCode}
+                  onChange={(e) => setInputCode(e.target.value.toLowerCase())} 
+                  maxLength={4} 
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-5 text-center text-3xl font-mono tracking-[0.4em] lowercase focus:ring-2 focus:ring-purple-500 outline-none transition-all text-purple-400 placeholder:text-slate-700"
                 />
                 <button 
                   onClick={handleRetrieve}
@@ -171,6 +166,7 @@ const handleRetrieve = async () => {
                 </button>
               </div>
 
+              {/* POPUP / PREVIEW CARD */}
               {resultUrl && (
                 <div className="mt-6 p-6 bg-green-500/5 border border-green-500/20 rounded-[2rem] flex flex-col items-center text-center space-y-4 animate-in slide-in-from-bottom-6 duration-500">
                   <div className="p-4 bg-green-500/10 rounded-full border border-green-500/20">
@@ -181,13 +177,19 @@ const handleRetrieve = async () => {
                     <p className="text-xs text-slate-500">Ready for secure download</p>
                   </div>
                   <a 
-                  href={resultUrl} 
-                  // ADD THIS: it tells the browser to save the file
-                  download 
-                  rel="noreferrer"
-                  className="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-black transition-all shadow-lg flex items-center justify-center gap-2">
-                  DOWNLOAD FILE <Download size={20} />
+                    href={resultUrl} 
+                    download
+                    rel="noreferrer"
+                    className="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-black transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    DOWNLOAD FILE <Download size={20} />
                   </a>
+                  <button 
+                    onClick={() => setResultUrl('')}
+                    className="text-[10px] uppercase tracking-widest text-slate-600 hover:text-slate-400 transition-colors"
+                  >
+                    Close Preview
+                  </button>
                 </div>
               )}
             </div>
