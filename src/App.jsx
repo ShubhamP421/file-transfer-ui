@@ -9,6 +9,7 @@ const App = () => {
   const [resultUrl, setResultUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [filePreview, setFilePreview] = useState(null); // To store the found file info
 
   // ⚠️ REPLACE THIS with your actual Render URL (e.g., https://api-xyz.onrender.com)
   const API_URL = "https://file-transfer-system-ug93.onrender.com"; 
@@ -39,25 +40,31 @@ const App = () => {
   };
 
   // --- Logic: Retrieve File ---
-  const handleRetrieve = async () => {
-    if (!inputCode) return;
-    setLoading(true);
-    setResultUrl('');
+const handleRetrieve = async () => {
+  if (!inputCode) return;
+  setLoading(true);
+  
+  // We clear any old preview before searching for a new one
+  setFilePreview(null); 
+
+  try {
+    // We trim and lowercase to prevent those mobile keyboard errors
+    const cleanCode = inputCode.trim().toLowerCase();
+    const res = await fetch(`${API_URL}/file/${cleanCode}`);
     
-    try {
-      const res = await fetch(`${API_URL}/file/${inputCode}`);
-      if (res.ok) {
-        const data = await res.json();
-        setResultUrl(data.downloadUrl);
-      } else {
-        alert("Invalid or expired code ❌");
-      }
-    } catch (err) {
-      alert("Error connecting to server.");
-    } finally {
-      setLoading(false);
+    if (res.ok) {
+      const data = await res.json();
+      // ✅ Store the data in filePreview to trigger the "Pop-up" UI
+      setFilePreview(data); 
+    } else {
+      alert("Invalid or expired code ❌");
     }
-  };
+  } catch (err) {
+    alert("Error connecting to server.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);
@@ -174,12 +181,12 @@ const App = () => {
                     <p className="text-xs text-slate-500">Ready for secure download</p>
                   </div>
                   <a 
-                    href={resultUrl} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-black transition-all shadow-lg flex items-center justify-center gap-2"
-                  >
-                    DOWNLOAD FILE <Download size={20} />
+                  href={resultUrl} 
+                  // ADD THIS: it tells the browser to save the file
+                  download 
+                  rel="noreferrer"
+                  className="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-black transition-all shadow-lg flex items-center justify-center gap-2">
+                  DOWNLOAD FILE <Download size={20} />
                   </a>
                 </div>
               )}
