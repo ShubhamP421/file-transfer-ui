@@ -126,7 +126,7 @@ const App = () => {
                 <div className="mt-4 p-5 bg-slate-950 border border-blue-500/30 rounded-2xl flex items-center justify-between animate-in zoom-in duration-300">
                   <div>
                     <span className="text-[10px] uppercase tracking-[0.3em] text-blue-500 font-bold block mb-1">Your Passcode</span>
-                    <p className="text-4xl font-mono font-black text-white leading-tight tracking-tighter lowercase">{code}</p>
+                    <p className="text-4xl font-mono font-black text-white leading-tight tracking-tighter lowercase break-all">{code}</p>
                   </div>
                   <button 
                     onClick={copyToClipboard}
