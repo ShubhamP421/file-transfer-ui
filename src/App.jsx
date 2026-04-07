@@ -10,7 +10,16 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // ⚠️ REPLACE THIS with your actual Render URL
   const API_URL = "https://file-transfer-system-ug93.onrender.com"; 
+
+  // --- Logic: Copy to Clipboard ---
+  const copyToClipboard = () => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // --- Logic: Upload File ---
   const handleUpload = async () => {
@@ -37,46 +46,51 @@ const App = () => {
     }
   };
 
- // --- Logic: Retrieve File ---
+  // --- Logic: Retrieve File (The "Nuclear" Download Fix) ---
   const handleRetrieve = async () => {
-  if (!inputCode) return;
-  setLoading(true);
-  
-  try {
-    const res = await fetch(`${API_URL}/file/${inputCode.trim().toLowerCase()}`);
-    const data = await res.json();
+    if (!inputCode) return;
+    setLoading(true);
+    setResultUrl(''); 
     
-    if (res.ok) {
-      // THE NUCLEAR OPTION: Fetch the file as a blob to bypass CORS/Frame errors
-      const fileResponse = await fetch(data.downloadUrl);
-      const blob = await fileResponse.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
+    try {
+      const cleanCode = inputCode.trim().toLowerCase();
+      const res = await fetch(`${API_URL}/file/${cleanCode}`);
       
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = data.fileName; // Uses the original name
-      document.body.appendChild(link);
-      link.click();
-      
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-      setResultUrl(data.downloadUrl);
-    } else {
-      alert("Invalid Code");
+      if (res.ok) {
+        const data = await res.json();
+        
+        // Use Fetch + Blob to bypass Chrome "Unsafe Attempt" errors for PDFs
+        const fileResponse = await fetch(data.downloadUrl);
+        const blob = await fileResponse.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = data.fileName; // Preserves the exact name
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+        
+        // Show success UI
+        setResultUrl(data.downloadUrl); 
+      } else {
+        alert("Invalid or expired code ❌");
+      }
+    } catch (err) {
+      console.error("Download Error:", err);
+      alert("Download blocked by browser. Please try again.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    alert("Download blocked by browser security. Check console.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center p-4 font-sans text-sm">
       
-      {/* Glow Effect in Background */}
+      {/* Glow Effect */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
 
       {/* Main Card */}
@@ -100,7 +114,6 @@ const App = () => {
 
         <div className="p-8 pt-4">
           {tab === 'upload' ? (
-            /* SEND VIEW */
             <div className="space-y-6">
               <div className="text-center space-y-1">
                 <h2 className="text-3xl font-black text-white italic tracking-tighter">FLASH SHARE</h2>
@@ -134,7 +147,7 @@ const App = () => {
                 <div className="mt-4 p-5 bg-slate-950 border border-blue-500/30 rounded-2xl flex items-center justify-between animate-in zoom-in duration-300">
                   <div>
                     <span className="text-[10px] uppercase tracking-[0.3em] text-blue-500 font-bold block mb-1">Your Passcode</span>
-                    <p className="text-4xl font-mono font-black text-white leading-tight tracking-tighter lowercase break-all">{code}</p>
+                    <p className="text-4xl font-mono font-black text-white leading-tight tracking-tighter lowercase">{code}</p>
                   </div>
                   <button 
                     onClick={copyToClipboard}
@@ -146,7 +159,6 @@ const App = () => {
               )}
             </div>
           ) : (
-            /* RECEIVE VIEW */
             <div className="space-y-6">
               <div className="text-center space-y-1">
                 <h2 className="text-3xl font-black text-white italic tracking-tight">RETRIEVE</h2>
@@ -171,7 +183,6 @@ const App = () => {
                 </button>
               </div>
 
-              {/* POPUP / PREVIEW CARD */}
               {resultUrl && (
                 <div className="mt-6 p-6 bg-green-500/5 border border-green-500/20 rounded-[2rem] flex flex-col items-center text-center space-y-4 animate-in slide-in-from-bottom-6 duration-500">
                   <div className="p-4 bg-green-500/10 rounded-full border border-green-500/20">
@@ -179,16 +190,8 @@ const App = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-lg font-bold text-white tracking-tight leading-none">File Located!</p>
-                    <p className="text-xs text-slate-500">Ready for secure download</p>
+                    <p className="text-xs text-slate-500">Secure download successful</p>
                   </div>
-                  <a 
-                    href={resultUrl} 
-                    download
-                    rel="noreferrer"
-                    className="w-full py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-black transition-all shadow-lg flex items-center justify-center gap-2"
-                  >
-                    DOWNLOAD FILE <Download size={20} />
-                  </a>
                   <button 
                     onClick={() => setResultUrl('')}
                     className="text-[10px] uppercase tracking-widest text-slate-600 hover:text-slate-400 transition-colors"
@@ -202,7 +205,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* Security Badge Footer */}
+      {/* Footer */}
       <div className="mt-8 flex items-center gap-6 px-6 py-3 bg-slate-900/50 rounded-full border border-slate-800 text-[10px] uppercase tracking-widest font-bold text-slate-500">
         <div className="flex items-center gap-2">
           <ShieldCheck size={14} className="text-blue-500" />
