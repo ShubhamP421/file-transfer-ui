@@ -39,43 +39,39 @@ const App = () => {
 
  // --- Logic: Retrieve File ---
   const handleRetrieve = async () => {
-    if (!inputCode) return;
-    setLoading(true);
-    setResultUrl(''); 
-    
-    try {
-      const cleanCode = inputCode.trim().toLowerCase();
-      const res = await fetch(`${API_URL}/file/${cleanCode}`);
-      
-      if (res.ok) {
-        const data = await res.json();
+  if (!inputCode) return;
+  setLoading(true);
   
-        const link = document.createElement('a');
-        link.href = data.downloadUrl;
+  try {
+    const res = await fetch(`${API_URL}/file/${inputCode.trim().toLowerCase()}`);
+    const data = await res.json();
+    
+    if (res.ok) {
+      // THE NUCLEAR OPTION: Fetch the file as a blob to bypass CORS/Frame errors
+      const fileResponse = await fetch(data.downloadUrl);
+      const blob = await fileResponse.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
       
-        link.setAttribute('target', '_blank');
-        link.setAttribute('download', data.fileName || 'file');
-        
-        document.body.appendChild(link);
-        link.click();
-        
-        document.body.removeChild(link);
-        setResultUrl(data.downloadUrl); 
-      } else {
-        alert("Invalid or expired code ❌");
-      }
-    } catch (err) {
-      alert("Error connecting to server.");
-    } finally {
-      setLoading(false);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = data.fileName; // Uses the original name
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      setResultUrl(data.downloadUrl);
+    } else {
+      alert("Invalid Code");
     }
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Download blocked by browser security. Check console.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center p-4 font-sans text-sm">
