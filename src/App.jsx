@@ -38,11 +38,11 @@ const App = () => {
     }
   };
 
-  // --- Logic: Retrieve File ---
+ // --- Logic: Retrieve File ---
   const handleRetrieve = async () => {
     if (!inputCode) return;
     setLoading(true);
-    setResultUrl(''); // Clear previous results
+    setResultUrl(''); 
     
     try {
       const cleanCode = inputCode.trim().toLowerCase();
@@ -50,7 +50,22 @@ const App = () => {
       
       if (res.ok) {
         const data = await res.json();
-        // ✅ This sets the URL which triggers the "Pop-up" card below
+        
+        // 1. Create a hidden anchor element
+        const link = document.createElement('a');
+        link.href = data.downloadUrl;
+        
+        // 2. IMPORTANT: Open in new tab + set download attribute
+        // This bypasses the Chrome "Unsafe attempt" block
+        link.setAttribute('target', '_blank');
+        link.setAttribute('download', data.fileName || 'file');
+        
+        // 3. Programmatically click it
+        document.body.appendChild(link);
+        link.click();
+        
+        // 4. Cleanup and show success UI
+        document.body.removeChild(link);
         setResultUrl(data.downloadUrl); 
       } else {
         alert("Invalid or expired code ❌");
