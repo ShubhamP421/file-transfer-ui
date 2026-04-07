@@ -10,7 +10,6 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // ⚠️ REPLACE THIS with your actual Render URL
   const API_URL = "https://file-transfer-system-ug93.onrender.com"; 
 
   // --- Logic: Upload File ---
@@ -50,21 +49,16 @@ const App = () => {
       
       if (res.ok) {
         const data = await res.json();
-        
-        // 1. Create a hidden anchor element
+  
         const link = document.createElement('a');
         link.href = data.downloadUrl;
-        
-        // 2. IMPORTANT: Open in new tab + set download attribute
-        // This bypasses the Chrome "Unsafe attempt" block
+      
         link.setAttribute('target', '_blank');
         link.setAttribute('download', data.fileName || 'file');
         
-        // 3. Programmatically click it
         document.body.appendChild(link);
         link.click();
         
-        // 4. Cleanup and show success UI
         document.body.removeChild(link);
         setResultUrl(data.downloadUrl); 
       } else {
