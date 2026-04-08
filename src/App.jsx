@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Download, Copy, Check, FileText, Loader2, ShieldCheck, Cloud, ArrowRight } from 'lucide-react';
-import { Waves } from './Waves'; // Import your new Waves component
+import { Waves } from './Waves.jsx'; // Import your new Waves component
 
 const App = () => {
   const [tab, setTab] = useState('upload'); 
