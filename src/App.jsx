@@ -17,23 +17,34 @@ const App = () => {
 
 useEffect(() => {
     const checkServer = async () => {
+      setServerStatus('checking'); 
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
       try {
         const res = await fetch(`${API_URL}/?t=${Date.now()}`, {
           method: 'GET',
-          cache: 'no-store'
+          cache: 'no-store',
+          signal: controller.signal 
         });
         
+        clearTimeout(timeoutId); 
+        
         if (res.ok) {
-          setServerStatus('online');
+          setServerStatus('online'); 
         } else {
-          setServerStatus('offline');
+          setServerStatus('offline'); 
         }
       } catch (error) {
-        setServerStatus('offline');
+        clearTimeout(timeoutId);
+        setServerStatus('offline'); 
       }
     };
 
+
     checkServer();
+    
     const interval = setInterval(checkServer, 30000); 
     return () => clearInterval(interval);
   }, []);
