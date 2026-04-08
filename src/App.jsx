@@ -192,6 +192,7 @@ const App = () => {
                 {file && <p className="text-xs text-zinc-500 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>}
               </div>
 
+              {/* Upload Button */}
               <button 
                 onClick={handleUpload}
                 disabled={loading || !file}
@@ -202,6 +203,7 @@ const App = () => {
                 )}
               </button>
 
+              {/* Success Result */}
               {code && (
                 <div className="mt-4 p-4 bg-zinc-900/80 border border-zinc-800 rounded-xl flex items-center justify-between animate-in zoom-in-95 duration-300">
                   <div>
