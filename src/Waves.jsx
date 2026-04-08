@@ -127,7 +127,7 @@ export function Waves({
         }
     }
 
-     const movePoints = (time) => {
+    const movePoints = (time) => {
         const { current: lines } = linesRef
         const { current: mouse } = mouseRef
         const { current: noise } = noiseRef
@@ -169,8 +169,7 @@ export function Waves({
                 p.cursor.y = Math.min(50, Math.max(-50, p.cursor.y))  
             })
         })
-    }
-    }
+    } // <-- Removed the sneaky extra bracket that was right here!
 
     const moved = (point, withCursorForce = true) => {
         return {
@@ -266,3 +265,4 @@ export function Waves({
             />
         </div>
     )
+}
