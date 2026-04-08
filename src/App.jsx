@@ -13,13 +13,16 @@ const App = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [serverStatus, setServerStatus] = useState('checking');
 
-  // ⚠️ REPLACE THIS with your actual Render URL
   const API_URL = "https://file-transfer-system-ug93.onrender.com"; 
 
-  useEffect(() => {
+useEffect(() => {
     const checkServer = async () => {
       try {
-        const res = await fetch(API_URL);
+        const res = await fetch(`${API_URL}/?t=${Date.now()}`, {
+          method: 'GET',
+          cache: 'no-store'
+        });
+        
         if (res.ok) {
           setServerStatus('online');
         } else {
