@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Upload, Download, Copy, Check, FileText, Loader2, ShieldCheck } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Upload, Download, Copy, Check, FileText, Loader2, ShieldCheck, Cloud, ArrowRight } from 'lucide-react';
 
 const App = () => {
   const [tab, setTab] = useState('upload'); 
@@ -9,6 +9,7 @@ const App = () => {
   const [resultUrl, setResultUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // ⚠️ REPLACE THIS with your actual Render URL
   const API_URL = "https://file-transfer-system-ug93.onrender.com"; 
@@ -19,6 +20,25 @@ const App = () => {
     navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // --- Logic: Drag & Drop ---
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+    }
   };
 
   // --- Logic: Upload File ---
@@ -46,7 +66,7 @@ const App = () => {
     }
   };
 
-  // --- Logic: Retrieve File (The "Nuclear" Download Fix) ---
+  // --- Logic: Retrieve File ---
   const handleRetrieve = async () => {
     if (!inputCode) return;
     setLoading(true);
@@ -59,22 +79,19 @@ const App = () => {
       if (res.ok) {
         const data = await res.json();
         
-        // Use Fetch + Blob to bypass Chrome "Unsafe Attempt" errors for PDFs
         const fileResponse = await fetch(data.downloadUrl);
         const blob = await fileResponse.blob();
         const blobUrl = window.URL.createObjectURL(blob);
         
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = data.fileName; // Preserves the exact name
+        link.download = data.fileName; 
         document.body.appendChild(link);
         link.click();
         
-        // Cleanup
         document.body.removeChild(link);
         window.URL.revokeObjectURL(blobUrl);
         
-        // Show success UI
         setResultUrl(data.downloadUrl); 
       } else {
         alert("Invalid or expired code ❌");
@@ -88,116 +105,139 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 flex flex-col items-center justify-center p-4 font-sans text-sm">
+    <div className="min-h-screen bg-[#09090b] text-zinc-200 flex flex-col items-center justify-center p-4 font-sans selection:bg-blue-500/30">
       
-      {/* Glow Effect */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
+      {/* Background Depth (Subtle Radial Gradient instead of heavy blur) */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.03)_0%,transparent_100%)] pointer-events-none" />
 
-      {/* Main Card */}
-      <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-2xl border border-slate-800 rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10">
+      {/* Main Container */}
+      <div className="w-full max-w-[420px] bg-[#0c0c0e]/80 backdrop-blur-xl border border-zinc-800/60 rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.4)] relative z-10 transition-all duration-500">
         
-        {/* Navigation Tabs */}
-        <div className="flex p-2 gap-1 bg-slate-950/50 m-4 rounded-2xl border border-slate-800">
-          <button 
-            onClick={() => {setTab('upload'); setCode(''); setFile(null);}}
-            className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${tab === 'upload' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' : 'text-slate-500 hover:bg-slate-800/50'}`}
-          >
-            <Upload size={18} /> Send
-          </button>
-          <button 
-            onClick={() => {setTab('download'); setInputCode(''); setResultUrl('');}}
-            className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${tab === 'download' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40' : 'text-slate-500 hover:bg-slate-800/50'}`}
-          >
-            <Download size={18} /> Receive
-          </button>
+        {/* Header / Brand */}
+        <div className="pt-8 pb-4 px-8 text-center">
+          <div className="flex justify-center mb-3">
+            <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+              <Cloud size={24} className="text-blue-500" />
+            </div>
+          </div>
+          <h2 className="text-xl font-semibold text-zinc-100 tracking-tight">Flash Share</h2>
+          <p className="text-zinc-500 text-xs mt-1 font-medium">Secure, ephemeral file transfer</p>
         </div>
 
-        <div className="p-8 pt-4">
-          {tab === 'upload' ? (
-            <div className="space-y-6">
-              <div className="text-center space-y-1">
-                <h2 className="text-3xl font-black text-white italic tracking-tighter">FLASH SHARE</h2>
-                <p className="text-slate-500 text-[10px] font-medium tracking-[0.2em] uppercase">Ephemeral Cloud Transfer</p>
-              </div>
+        {/* Navigation Tabs (Segmented Control) */}
+        <div className="px-8 pb-4">
+          <div className="flex p-1 bg-zinc-900/80 rounded-xl border border-zinc-800/50">
+            <button 
+              onClick={() => {setTab('upload'); setCode(''); setFile(null);}}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${tab === 'upload' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+              Send
+            </button>
+            <button 
+              onClick={() => {setTab('download'); setInputCode(''); setResultUrl('');}}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${tab === 'download' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+              Receive
+            </button>
+          </div>
+        </div>
 
-              <div className="group relative border-2 border-dashed border-slate-700 rounded-3xl p-10 hover:border-blue-500/50 transition-all bg-slate-950/30 flex flex-col items-center justify-center text-center">
+        {/* Content Area */}
+        <div className="px-8 pb-8">
+          {tab === 'upload' ? (
+            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              
+              {/* Drag & Drop Zone */}
+              <div 
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300 flex flex-col items-center justify-center text-center group bg-zinc-900/30
+                  ${isDragging ? 'border-blue-500 bg-blue-500/5' : 'border-zinc-800 hover:border-zinc-700'} 
+                  ${file ? 'border-blue-500/30 bg-blue-500/5' : ''}`}
+              >
                 <input 
                   type="file" 
                   onChange={(e) => setFile(e.target.files[0])}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                 />
-                <div className="p-4 bg-blue-500/10 rounded-full mb-4 group-hover:scale-110 transition-transform">
-                  <Upload className="text-blue-500" size={32} />
+                
+                <div className={`p-3 rounded-full mb-3 transition-colors duration-300 ${file ? 'bg-blue-500/20 text-blue-400' : 'bg-zinc-800 text-zinc-400 group-hover:text-zinc-300'}`}>
+                  {file ? <FileText size={24} /> : <Upload size={24} />}
                 </div>
-                <p className="text-sm font-semibold text-slate-300">
-                  {file ? file.name : "Drop file or Click to Browse"}
+                
+                <p className="text-sm font-medium text-zinc-300 truncate w-full px-4">
+                  {file ? file.name : "Click or drag file here"}
                 </p>
-                {file && <p className="text-xs text-blue-500/70 mt-2 font-mono">{(file.size / 1024).toFixed(1)} KB</p>}
+                {file && <p className="text-xs text-zinc-500 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>}
               </div>
 
+              {/* Upload Button */}
               <button 
                 onClick={handleUpload}
                 disabled={loading || !file}
-                className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-900/20 transition-all flex justify-center items-center gap-3"
+                className="w-full py-3.5 bg-zinc-100 hover:bg-white disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] flex justify-center items-center gap-2"
               >
-                {loading ? <Loader2 className="animate-spin" /> : "GENERATE SECURE CODE"}
+                {loading ? <Loader2 size={18} className="animate-spin" /> : (
+                  <>Generate Code <ArrowRight size={16} /></>
+                )}
               </button>
 
+              {/* Success Result */}
               {code && (
-                <div className="mt-4 p-5 bg-slate-950 border border-blue-500/30 rounded-2xl flex items-center justify-between animate-in zoom-in duration-300">
+                <div className="mt-4 p-4 bg-zinc-900/80 border border-zinc-800 rounded-xl flex items-center justify-between animate-in zoom-in-95 duration-300">
                   <div>
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-blue-500 font-bold block mb-1">Your Passcode</span>
-                    <p className="text-4xl font-mono font-black text-white leading-tight tracking-tighter lowercase">{code}</p>
+                    <span className="text-[11px] font-medium text-zinc-500 mb-0.5 block">Access Code</span>
+                    <p className="text-2xl font-mono font-semibold text-blue-400 tracking-widest">{code}</p>
                   </div>
                   <button 
                     onClick={copyToClipboard}
-                    className="p-4 bg-slate-900 rounded-xl hover:bg-slate-800 text-blue-400 transition-colors active:scale-95"
+                    className="p-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-300 transition-colors active:scale-90"
+                    title="Copy code"
                   >
-                    {copied ? <Check size={24} className="text-green-400" /> : <Copy size={24} />}
+                    {copied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="text-center space-y-1">
-                <h2 className="text-3xl font-black text-white italic tracking-tight">RETRIEVE</h2>
-                <p className="text-slate-500 text-[10px] font-medium tracking-widest uppercase italic">Enter the unique 4-character code</p>
-              </div>
-
-              <div className="space-y-4">
-                <input 
-                  type="text" 
-                  placeholder="code"
-                  value={inputCode}
-                  onChange={(e) => setInputCode(e.target.value.toLowerCase())} 
-                  maxLength={4} 
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-5 text-center text-3xl font-mono tracking-[0.4em] lowercase focus:ring-2 focus:ring-purple-500 outline-none transition-all text-purple-400 placeholder:text-slate-700"
-                />
+            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              
+              {/* Download Form */}
+              <div className="space-y-3">
+                <label className="text-xs font-medium text-zinc-500 block text-center">
+                  Enter your 4-character code
+                </label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={inputCode}
+                    onChange={(e) => setInputCode(e.target.value.toLowerCase())} 
+                    maxLength={4} 
+                    placeholder="e.g. x7y2"
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-4 text-center text-2xl font-mono tracking-[0.3em] lowercase focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-zinc-100 placeholder:text-zinc-700 placeholder:tracking-normal placeholder:font-sans placeholder:text-base"
+                  />
+                </div>
+                
                 <button 
                   onClick={handleRetrieve}
-                  disabled={loading || !inputCode}
-                  className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-purple-900/20 transition-all flex justify-center items-center gap-3"
+                  disabled={loading || inputCode.length < 4}
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-xl font-semibold text-sm transition-all active:scale-[0.98] flex justify-center items-center gap-2 mt-2"
                 >
-                  {loading ? <Loader2 className="animate-spin" /> : "SEARCH CLOUD"}
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : "Retrieve File"}
                 </button>
               </div>
 
+              {/* Download Success */}
               {resultUrl && (
-                <div className="mt-6 p-6 bg-green-500/5 border border-green-500/20 rounded-[2rem] flex flex-col items-center text-center space-y-4 animate-in slide-in-from-bottom-6 duration-500">
-                  <div className="p-4 bg-green-500/10 rounded-full border border-green-500/20">
-                    <FileText className="text-green-500" size={32} />
+                <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl flex items-center gap-4 animate-in slide-in-from-bottom-4 duration-300">
+                  <div className="p-2 bg-green-500/20 rounded-lg">
+                    <Check className="text-green-400" size={20} />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-lg font-bold text-white tracking-tight leading-none">File Located!</p>
-                    <p className="text-xs text-slate-500">Secure download successful</p>
+                  <div>
+                    <p className="text-sm font-medium text-zinc-200">Download Complete</p>
+                    <p className="text-xs text-zinc-500">Your file has been saved.</p>
                   </div>
-                  <button 
-                    onClick={() => setResultUrl('')}
-                    className="text-[10px] uppercase tracking-widest text-slate-600 hover:text-slate-400 transition-colors"
-                  >
-                    Close Preview
-                  </button>
                 </div>
               )}
             </div>
@@ -205,17 +245,17 @@ const App = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="mt-8 flex items-center gap-6 px-6 py-3 bg-slate-900/50 rounded-full border border-slate-800 text-[10px] uppercase tracking-widest font-bold text-slate-500">
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={14} className="text-blue-500" />
-          End-to-End Cloud
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-          Server Active
+      {/* Footer Status */}
+      <div className="mt-8 flex items-center gap-2 text-xs font-medium text-zinc-500">
+        <ShieldCheck size={14} className="text-zinc-400" />
+        <span>End-to-end encrypted</span>
+        <span className="mx-2 w-1 h-1 rounded-full bg-zinc-700"></span>
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span>Systems operational</span>
         </div>
       </div>
+      
     </div>
   );
 };
