@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, Download, Copy, Check, FileText, Loader2, ShieldCheck, Cloud, ArrowRight } from 'lucide-react';
 
 const App = () => {
@@ -10,9 +10,35 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // New state for server status: 'checking', 'online', or 'offline'
+  const [serverStatus, setServerStatus] = useState('checking');
 
   // ⚠️ REPLACE THIS with your actual Render URL
   const API_URL = "https://file-transfer-system-ug93.onrender.com"; 
+
+  // --- Logic: Check Server Status ---
+  useEffect(() => {
+    const checkServer = async () => {
+      try {
+        // Pinging the base URL to check if the server is awake
+        const res = await fetch(API_URL);
+        if (res.ok) {
+          setServerStatus('online');
+        } else {
+          setServerStatus('offline');
+        }
+      } catch (error) {
+        setServerStatus('offline');
+      }
+    };
+
+    checkServer();
+    
+    // Optional: Poll the server every 30 seconds to keep status updated
+    const interval = setInterval(checkServer, 30000); 
+    return () => clearInterval(interval);
+  }, []);
 
   // --- Logic: Copy to Clipboard ---
   const copyToClipboard = () => {
@@ -107,7 +133,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-200 flex flex-col items-center justify-center p-4 font-sans selection:bg-blue-500/30">
       
-      {/* Background Depth (Subtle Radial Gradient instead of heavy blur) */}
+      {/* Background Depth */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.03)_0%,transparent_100%)] pointer-events-none" />
 
       {/* Main Container */}
@@ -124,7 +150,7 @@ const App = () => {
           <p className="text-zinc-500 text-xs mt-1 font-medium">Secure, ephemeral file transfer</p>
         </div>
 
-        {/* Navigation Tabs (Segmented Control) */}
+        {/* Navigation Tabs */}
         <div className="px-8 pb-4">
           <div className="flex p-1 bg-zinc-900/80 rounded-xl border border-zinc-800/50">
             <button 
@@ -250,9 +276,17 @@ const App = () => {
         <ShieldCheck size={14} className="text-zinc-400" />
         <span>End-to-end encrypted</span>
         <span className="mx-2 w-1 h-1 rounded-full bg-zinc-700"></span>
-        <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span>Systems operational</span>
+        <div className="flex items-center gap-1.5 transition-colors duration-300">
+          <div className={`w-1.5 h-1.5 rounded-full ${
+            serverStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
+            serverStatus === 'offline' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 
+            'bg-amber-500 animate-pulse'
+          }`} />
+          <span>
+            {serverStatus === 'online' ? 'Systems operational' : 
+             serverStatus === 'offline' ? 'System offline' : 
+             'Checking server...'}
+          </span>
         </div>
       </div>
       
