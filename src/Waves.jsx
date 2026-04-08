@@ -127,7 +127,7 @@ export function Waves({
         }
     }
 
-    const movePoints = (time) => {
+     const movePoints = (time) => {
         const { current: lines } = linesRef
         const { current: mouse } = mouseRef
         const { current: noise } = noiseRef
@@ -147,29 +147,29 @@ export function Waves({
                 const dx = p.x - mouse.sx
                 const dy = p.y - mouse.sy
                 const d = Math.hypot(dx, dy)
-                const l = Math.max(175, mouse.vs)
+                const l = Math.max(175, mouse.vs) 
 
                 if (d < l) {
                     const s = 1 - d / l
                     const f = Math.cos(d * 0.001) * s
 
-                    p.cursor.vx += Math.cos(mouse.a) * f * l * mouse.vs * 0.00035  
-                    p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * 0.00035  
+                    p.cursor.vx += Math.cos(mouse.a) * f * l * mouse.vs * 0.0015  
+                    p.cursor.vy += Math.sin(mouse.a) * f * l * mouse.vs * 0.0015  
                 }
 
-                p.cursor.vx += (0 - p.cursor.x) * 0.01   
-                p.cursor.vy += (0 - p.cursor.y) * 0.01   
+                p.cursor.vx += (0 - p.cursor.x) * 0.04   
+                p.cursor.vy += (0 - p.cursor.y) * 0.04   
 
-                p.cursor.vx *= 0.95  
-                p.cursor.vy *= 0.95  
+                p.cursor.vx *= 0.85  
+                p.cursor.vy *= 0.85  
 
                 p.cursor.x += p.cursor.vx
                 p.cursor.y += p.cursor.vy
-
                 p.cursor.x = Math.min(50, Math.max(-50, p.cursor.x))  
                 p.cursor.y = Math.min(50, Math.max(-50, p.cursor.y))  
             })
         })
+    }
     }
 
     const moved = (point, withCursorForce = true) => {
@@ -201,8 +201,8 @@ export function Waves({
     const tick = (time) => {
         const { current: mouse } = mouseRef
 
-        mouse.sx += (mouse.x - mouse.sx) * 0.1
-        mouse.sy += (mouse.y - mouse.sy) * 0.1
+        mouse.sx += (mouse.x - mouse.sx) * 0.4
+        mouse.sy += (mouse.y - mouse.sy) * 0.4
 
         const dx = mouse.x - mouse.lx
         const dy = mouse.y - mouse.ly
