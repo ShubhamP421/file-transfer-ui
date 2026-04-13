@@ -1,16 +1,103 @@
-# React + Vite
+# 📁 File Transfer UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern and minimal **file transfer user interface** designed for seamless file sharing between devices. Built with a focus on simplicity, performance, and a clean user experience.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Features
 
-## React Compiler
+* ⚡ Fast and smooth file upload & download UI
+* 📂 Drag-and-drop file support
+* 🔄 Real-time transfer feedback
+* 🎨 Clean and minimal design
+* 📱 Responsive layout (works on desktop & mobile)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* Frontend: React / Vite
+* Styling: Tailwind CSS
+* Other: JavaScript (ES6+)
+
+---
+
+## 📂 Project Structure
+
+```
+file-transfer-ui/
+│
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── assets/
+│   └── App.jsx
+│
+├── public/
+├── package.json
+└── vite.config.js
+```
+
+---
+
+## ⚙️ Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ShubhamP421/file-transfer-ui.git
+cd file-transfer-ui
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the development server:
+
+```bash
+npm run dev
+```
+
+---
+
+## ▶️ Usage
+
+1. Start the development server
+2. Open the app in your browser
+3. Upload files using drag-and-drop or file picker
+4. Track transfer progress in real-time
+
+---
+
+## 📌 Future Improvements
+
+* 🔐 Secure file transfer (encryption)
+* ☁️ Cloud storage integration
+* 📊 Transfer analytics dashboard
+* 👥 Multi-user support
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+Feel free to fork the repo and submit a pull request.
+
+---
+
+## 📄 License
+
+This project is open-source and available under the MIT License.
+
+---
+
+## 👨‍💻 Author
+
+**Shubham Prajapati**
+
+---
+
+⭐ If you like this project, consider giving it a star!
